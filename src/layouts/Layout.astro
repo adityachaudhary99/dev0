@@ -1,0 +1,77 @@
+---
+import '../styles/global.css';
+
+export interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'dev0.dev — Browser dev tools. Nothing leaves your page.',
+  description = 'JWT decoder, regex tester, cron parser, base64 chain. 100% client-side, your tokens never leave the page.',
+} = Astro.props;
+---
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A7%3C/text%3E%3C/svg%3E" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <slot />
+    <script>
+      // Single-page app: hash-based router for the 4 tools.
+      type Tool = 'jwt' | 'regex' | 'cron' | 'b64';
+      const TOOLS: { id: Tool; name: string; desc: string; emoji: string }[] = [
+        { id: 'jwt', name: 'JWT Decoder', desc: 'Decode, verify, inspect', emoji: '🔐' },
+        { id: 'regex', name: 'Regex Tester', desc: 'Test with match highlighting', emoji: '🔍' },
+        { id: 'cron', name: 'Cron Parser', desc: 'Next 10 runs + explanation', emoji: '⏰' },
+        { id: 'b64', name: 'Base64 / URL', desc: 'Encode, decode, auto-detect', emoji: '🔗' },
+      ];
+
+      function getToolFromHash(): Tool {
+        const h = location.hash.replace('#/', '').replace('#', '') as Tool;
+        return (['jwt', 'regex', 'cron', 'b64'] as Tool[]).includes(h) ? h : 'jwt';
+      }
+
+      function render() {
+        const tool = getToolFromHash();
+        const toolMeta = TOOLS.find(t => t.id === tool)!;
+        // Update nav active state
+        for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-tool-btn]')) {
+          const isActive = btn.dataset.toolBtn === tool;
+          btn.classList.toggle('bg-accent/10', isActive);
+          btn.classList.toggle('text-accent', isActive);
+          btn.classList.toggle('border-accent/30', isActive);
+          btn.classList.toggle('text-neutral-400', !isActive);
+          btn.classList.toggle('border-transparent', !isActive);
+        }
+        // Update current tool section visibility
+        for (const sec of document.querySelectorAll<HTMLElement>('[data-tool-section]')) {
+          sec.classList.toggle('hidden', sec.dataset.toolSection !== tool);
+        }
+        // Update title in header
+        const title = document.getElementById('current-tool-name');
+        if (title) title.textContent = toolMeta.name;
+        // Update hash in URL silently if not set
+        if (location.hash !== `#/${tool}`) {
+          history.replaceState(null, '', `#/${tool}`);
+        }
+      }
+
+      window.addEventListener('hashchange', render);
+      document.addEventListener('DOMContentLoaded', render);
+      // Also run immediately in case DOMContentLoaded already fired
+      if (document.readyState !== 'loading') render();
+    </script>
+  </body>
+</html>

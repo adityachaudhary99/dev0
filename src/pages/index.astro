@@ -1,0 +1,267 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout>
+  <div class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="border-b border-neutral-800/60 bg-[#0b0e14]/80 backdrop-blur sticky top-0 z-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <a href="#/jwt" class="flex items-center gap-2 group">
+            <div class="w-7 h-7 rounded-md bg-gradient-to-br from-accent to-emerald-600 flex items-center justify-center text-[#0b0e14] font-bold text-sm">d0</div>
+            <div>
+              <div class="font-semibold text-sm tracking-tight">dev0<span class="text-accent">.dev</span></div>
+              <div class="text-[10px] text-neutral-500 -mt-0.5">Browser dev tools</div>
+            </div>
+          </a>
+        </div>
+        <div class="text-xs text-neutral-500 hidden sm:flex items-center gap-2">
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
+          100% client-side · your tokens never leave this page
+        </div>
+      </div>
+      <!-- Tab nav -->
+      <nav class="max-w-7xl mx-auto px-4 sm:px-6 pb-2 overflow-x-auto scrollbar-thin">
+        <div class="flex gap-1 min-w-max">
+          <button data-tool-btn="jwt" class="px-3 py-1.5 text-xs font-medium rounded-md border transition-colors">🔐 JWT</button>
+          <button data-tool-btn="regex" class="px-3 py-1.5 text-xs font-medium rounded-md border transition-colors">🔍 Regex</button>
+          <button data-tool-btn="cron" class="px-3 py-1.5 text-xs font-medium rounded-md border transition-colors">⏰ Cron</button>
+          <button data-tool-btn="b64" class="px-3 py-1.5 text-xs font-medium rounded-md border transition-colors">🔗 Base64</button>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main content: one section per tool -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-6">
+      <div class="mb-6">
+        <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight">
+          <span id="current-tool-name">JWT Decoder</span>
+        </h1>
+        <p class="text-sm text-neutral-400 mt-1">Pick a tool from the bar above. Everything runs in your browser.</p>
+      </div>
+
+      <!-- =================== JWT =================== -->
+      <section data-tool-section="jwt" class="space-y-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="rounded-lg border border-neutral-800 bg-[#0f131a] overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-neutral-800 flex items-center justify-between">
+              <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Token</span>
+              <div class="flex items-center gap-2">
+                <span id="jwt-algo-badge" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400">—</span>
+                <button id="jwt-verify-btn" class="text-[10px] font-medium px-2 py-1 rounded bg-accent/10 text-accent hover:bg-accent/20 transition-colors">Verify</button>
+              </div>
+            </div>
+            <textarea
+              id="jwt-input"
+              class="w-full h-48 p-4 bg-transparent text-sm font-mono text-neutral-200 resize-none focus:outline-none placeholder:text-neutral-600"
+              placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+            ></textarea>
+            <div id="jwt-error" class="hidden px-4 py-2 bg-red-500/10 border-t border-red-500/30 text-xs text-red-400 font-mono"></div>
+          </div>
+
+          <div class="rounded-lg border border-neutral-800 bg-[#0f131a] overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-neutral-800 flex items-center justify-between">
+              <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Secret / Public Key</span>
+              <span class="text-[10px] text-neutral-600">optional, only for verify</span>
+            </div>
+            <textarea
+              id="jwt-secret"
+              class="w-full h-48 p-4 bg-transparent text-sm font-mono text-neutral-200 resize-none focus:outline-none placeholder:text-neutral-600"
+              placeholder="HMAC secret, or PEM public key for RS256/ES256"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="rounded-lg border border-neutral-800 bg-[#0f131a] overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-neutral-800">
+              <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Header</span>
+            </div>
+            <pre id="jwt-header" class="p-4 text-sm font-mono text-emerald-300 whitespace-pre-wrap break-all min-h-[80px]">—</pre>
+          </div>
+          <div class="rounded-lg border border-neutral-800 bg-[#0f131a] overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-neutral-800 flex items-center justify-between">
+              <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Payload</span>
+              <div id="jwt-claims" class="flex items-center gap-1.5"></div>
+            </div>
+            <pre id="jwt-payload" class="p-4 text-sm font-mono text-emerald-300 whitespace-pre-wrap break-all min-h-[80px]">—</pre>
+          </div>
+        </div>
+
+        <div id="jwt-verify-result" class="hidden rounded-lg border p-3 text-sm"></div>
+      </section>
+
+      <!-- =================== REGEX =================== -->
+      <section data-tool-section="regex" class="hidden space-y-4">
+        <div class="rounded-lg border border-neutral-800 bg-[#0f131a] overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-neutral-800 flex items-center gap-3">
+            <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Pattern</span>
+            <span class="text-neutral-600 font-mono text-sm">/</span>
+            <input
+              id="regex-pattern"
+              type="text"
+              class="flex-1 bg-transparent text-sm font-mono text-emerald-300 focus:outline-none placeholder:text-neutral-600"
+              placeholder="(\w+)@([\w.]+)"
+            />
+            <span class="text-neutral-600 font-mono text-sm">/</span>
+            <input
+              id="regex-flags"
+              type="text"
+              class="w-16 bg-transparent text-sm font-mono text-amber-300 focus:outline-none placeholder:text-neutral-600"
+              placeholder="g"
+              maxlength="6"
+            />
+          </div>
+          <div id="regex-error" class="hidden px-4 py-2 bg-red-500/10 border-t border-red-500/30 text-xs text-red-400 font-mono"></div>
+        </div>
+
+        <div class="rounded-lg border border-neutral-800 bg-[#0f131a] overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-neutral-800 flex items-center justify-between">
+            <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Test String</span>
+            <div class="flex items-center gap-3 text-[10px] text-neutral-500">
+              <span id="regex-match-count" class="font-mono">0 matches</span>
+              <button id="regex-load-sample" class="text-accent hover:underline">Load sample</button>
+            </div>
+          </div>
+          <textarea
+            id="regex-input"
+            class="w-full h-40 p-4 bg-transparent text-sm font-mono text-neutral-200 resize-y focus:outline-none placeholder:text-neutral-600"
+            placeholder="Paste text to test against the pattern above..."
+          ></textarea>
+        </div>
+
+        <div class="rounded-lg border border-neutral-800 bg-[#0f131a] overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-neutral-800">
+            <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Highlighted Matches</span>
+          </div>
+          <div id="regex-output" class="p-4 text-sm font-mono text-neutral-200 whitespace-pre-wrap break-words min-h-[100px]">
+            <span class="text-neutral-600">Matches will appear here as you type.</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="rounded-lg border border-neutral-800 bg-[#0f131a] overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-neutral-800">
+              <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Capture Groups</span>
+            </div>
+            <div id="regex-groups" class="p-4 text-xs font-mono text-neutral-400 min-h-[60px]">—</div>
+          </div>
+          <div class="rounded-lg border border-neutral-800 bg-[#0f131a] overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-neutral-800">
+              <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Explanation</span>
+            </div>
+            <div id="regex-explain" class="p-4 text-xs font-mono text-neutral-400 min-h-[60px]">—</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== CRON =================== -->
+      <section data-tool-section="cron" class="hidden space-y-4">
+        <div class="rounded-lg border border-neutral-800 bg-[#0f131a] overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-neutral-800 flex items-center gap-3">
+            <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Expression</span>
+            <input
+              id="cron-input"
+              type="text"
+              class="flex-1 bg-transparent text-lg font-mono text-emerald-300 focus:outline-none placeholder:text-neutral-600"
+              placeholder="*/15 9-17 * * 1-5"
+            />
+          </div>
+          <div id="cron-error" class="hidden px-4 py-2 bg-red-500/10 border-t border-red-500/30 text-xs text-red-400 font-mono"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="rounded-lg border border-neutral-800 bg-[#0f131a] overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-neutral-800 flex items-center justify-between">
+              <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Next 10 Runs</span>
+              <select id="cron-tz" class="bg-[#0f131a] border border-neutral-700 text-xs text-neutral-300 rounded px-2 py-1 focus:outline-none focus:border-accent">
+                <option value="local">Local time</option>
+                <option value="UTC">UTC</option>
+              </select>
+            </div>
+            <ul id="cron-next" class="divide-y divide-neutral-800/50 text-sm font-mono"></ul>
+          </div>
+          <div class="rounded-lg border border-neutral-800 bg-[#0f131a] overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-neutral-800">
+              <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Human-Readable</span>
+            </div>
+            <div id="cron-explain" class="p-4 text-sm text-neutral-200 min-h-[60px]">—</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== BASE64 =================== -->
+      <section data-tool-section="b64" class="hidden space-y-4">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs text-neutral-400">Mode:</span>
+          <div class="inline-flex bg-[#0f131a] border border-neutral-800 rounded-md p-0.5">
+            <button data-b64-mode="encode" class="b64-mode-btn px-3 py-1 text-xs font-medium rounded transition-colors">Encode</button>
+            <button data-b64-mode="decode" class="b64-mode-btn px-3 py-1 text-xs font-medium rounded transition-colors">Decode</button>
+            <button data-b64-mode="auto" class="b64-mode-btn px-3 py-1 text-xs font-medium rounded transition-colors bg-accent/10 text-accent">Auto-detect</button>
+          </div>
+          <span class="text-xs text-neutral-400 ml-2">Encoding:</span>
+          <div class="inline-flex bg-[#0f131a] border border-neutral-800 rounded-md p-0.5">
+            <button data-b64-enc="base64" class="b64-enc-btn px-3 py-1 text-xs font-medium rounded transition-colors bg-accent/10 text-accent">Base64</button>
+            <button data-b64-enc="url" class="b64-enc-btn px-3 py-1 text-xs font-medium rounded transition-colors">URL</button>
+            <button data-b64-enc="hex" class="b64-enc-btn px-3 py-1 text-xs font-medium rounded transition-colors">Hex</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="rounded-lg border border-neutral-800 bg-[#0f131a] overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-neutral-800 flex items-center justify-between">
+              <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider" id="b64-input-label">Input</span>
+              <span id="b64-bytes-in" class="text-[10px] font-mono text-neutral-500">0 bytes</span>
+            </div>
+            <textarea
+              id="b64-input"
+              class="w-full h-64 p-4 bg-transparent text-sm font-mono text-neutral-200 resize-none focus:outline-none placeholder:text-neutral-600"
+              placeholder='Hello, world!'
+            ></textarea>
+          </div>
+          <div class="rounded-lg border border-neutral-800 bg-[#0f131a] overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-neutral-800 flex items-center justify-between">
+              <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider" id="b64-output-label">Output</span>
+              <div class="flex items-center gap-2">
+                <span id="b64-bytes-out" class="text-[10px] font-mono text-neutral-500">0 bytes</span>
+                <button id="b64-copy" class="text-[10px] font-medium px-2 py-1 rounded bg-neutral-800 text-neutral-300 hover:bg-neutral-700 transition-colors">Copy</button>
+              </div>
+            </div>
+            <textarea
+              id="b64-output"
+              class="w-full h-64 p-4 bg-transparent text-sm font-mono text-emerald-300 resize-none focus:outline-none placeholder:text-neutral-600"
+              readonly
+            ></textarea>
+            <div id="b64-error" class="hidden px-4 py-2 bg-red-500/10 border-t border-red-500/30 text-xs text-red-400 font-mono"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="border-t border-neutral-800/60 mt-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-neutral-500">
+        <div>dev0.dev · inspired by <a href="https://pdf0.dev" class="text-accent hover:underline">pdf0.dev</a></div>
+        <div class="font-mono">0 trackers · 0 cookies · 0 telemetry</div>
+      </div>
+    </footer>
+  </div>
+</Layout>
+
+<script>
+  // Wire up the navigation buttons
+  document.querySelectorAll<HTMLButtonElement>('[data-tool-btn]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      location.hash = `#/${btn.dataset.toolBtn}`;
+    });
+  });
+</script>
+
+<script>
+  import '~/scripts/main.ts';
+</script>
+
+<style is:global>
+  .tool-nav-active {
+    @apply bg-accent/10 text-accent border-accent/30;
+  }
+</style>
