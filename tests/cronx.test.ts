@@ -8,8 +8,9 @@ describe('cronx', () => {
     const runs = nextRunsTz('0 9 * * *', 3, 'Asia/Kolkata');
     expect(runs).toHaveLength(3);
     for (const r of runs) {
+      // hour string may be '9' or '09' depending on the ICU build — compare numerically
       const h = new Intl.DateTimeFormat('en', { hour: 'numeric', hour12: false, timeZone: 'Asia/Kolkata' }).format(r);
-      expect(h).toBe('9');
+      expect(Number(h)).toBe(9);
     }
   });
   it('handles 6-field (seconds)', () => {
