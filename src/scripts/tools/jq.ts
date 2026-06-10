@@ -12,9 +12,29 @@
 // `astro dev` and the production `astro build` + `preview`.
 
 let jqPromise: Promise<any> | null = null;
+async function resolveJq(): Promise<any> {
+  // jq-web (0.6.2) resolves to different shapes across Vite dev and the prod
+  // Rollup bundle. Its jq.js ends by reassigning module.exports to a PROMISE
+  // of { json, raw } AFTER setting .default to the emscripten *factory fn*, so:
+  //   - prod: mod.default is the resolved promise -> await -> { json, raw }
+  //   - dev:  mod.default is the factory function -> must be CALLED, not awaited
+  // Unwrap defensively: if it's a thenable, await it; if it's a function, call
+  // it (emscripten factory -> Promise<Module>); follow nested .default; stop
+  // once we find a .json() entry point.
+  const mod: any = await import('jq-web');
+  let cand: any = mod?.default ?? mod;
+  for (let i = 0; i < 5; i++) {
+    if (cand && typeof cand.json === 'function') return cand;
+    if (cand && typeof cand.then === 'function') { cand = await cand; continue; }
+    if (typeof cand === 'function') { cand = cand(); continue; } // emscripten factory
+    if (cand && cand.default && cand.default !== cand) { cand = cand.default; continue; }
+    break;
+  }
+  if (cand && typeof cand.json === 'function') return cand;
+  throw new Error('jq engine loaded but exposed no json() entry point');
+}
 function loadJq() {
-  // The default export of jq-web is itself a Promise resolving to { json, raw }.
-  jqPromise ??= import('jq-web').then((m) => (m as any).default ?? m);
+  jqPromise ??= resolveJq();
   return jqPromise;
 }
 

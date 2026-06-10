@@ -9,10 +9,16 @@ export default defineConfig({
     inlineStylesheets: 'auto',
   },
   vite: {
-    // jq-web is an Emscripten build that breaks when esbuild "optimizes" it
-    // (it relies on runtime feature-detection and dynamic wasm loading). Exclude
-    // it so Vite serves it as-is in dev and bundles it untouched for prod. The
-    // wasm itself is shipped from public/jq.wasm and loaded at the site root.
-    optimizeDeps: { exclude: ['jq-web'] },
+    optimizeDeps: {
+      // These deps are CommonJS and are imported only inside dynamically-imported
+      // chunks (jq engine, quicktype engine, ERD renderer). optimizeDeps affects
+      // the DEV server only (prod uses Rollup). Without pre-bundling, Vite's dev
+      // server can't interop them on first dynamic import — jq-web in particular
+      // resolves to an EMPTY namespace when excluded, and dagre/quicktype throw
+      // "Failed to fetch dynamically imported module". Forcing esbuild to
+      // pre-bundle them to proper ESM fixes dev. The jq.wasm binary is served
+      // from public/jq.wasm (site root) and loaded by Emscripten's locateFile.
+      include: ['jq-web', 'quicktype-core', 'dagre'],
+    },
   },
 });
