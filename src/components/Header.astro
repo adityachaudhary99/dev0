@@ -1,0 +1,34 @@
+---
+const tools = [
+  { href: '/jwt', label: 'jwt' }, { href: '/regex', label: 'regex' },
+  { href: '/cron', label: 'cron' }, { href: '/base64', label: 'base64' },
+  { href: '/epoch', label: 'epoch' }, { href: '/json-to-types', label: 'types' },
+  { href: '/jq', label: 'jq' }, { href: '/erd', label: 'erd' },
+  { href: '/uuid', label: 'uuid' }, { href: '/cert', label: 'cert' },
+];
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+---
+<header class="border-b border-rule">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 pt-5 pb-3 flex items-baseline justify-between">
+    <a href="/" class="display text-2xl tracking-tight">dev<span class="text-accent">0</span></a>
+    <div class="flex items-center gap-5">
+      <button id="theme-toggle" class="label hover:text-ink" aria-label="Toggle theme">◐ theme</button>
+      <a href="https://github.com/adityachaudhary99" class="label hover:text-ink">github ↗</a>
+      <a href="/pro" class="label hover:text-accent">pro</a>
+    </div>
+  </div>
+  <nav class="max-w-6xl mx-auto px-4 sm:px-6 pb-3 overflow-x-auto">
+    <div class="flex gap-5 min-w-max">
+      {tools.map((t, i) => (
+        <a href={t.href}
+          class={`label hover:text-ink ${path === t.href ? 'text-accent underline underline-offset-4' : ''}`}>
+          {String(i + 1).padStart(2, '0')} {t.label}
+        </a>
+      ))}
+    </div>
+  </nav>
+</header>
+<script>
+  import { initThemeToggle } from '../scripts/theme';
+  initThemeToggle(document.getElementById('theme-toggle')!);
+</script>
