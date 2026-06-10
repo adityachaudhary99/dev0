@@ -92,16 +92,16 @@ function renderClaims(payload: any) {
   for (const c of claims) {
     if (typeof c.value !== 'number') continue;
     const now = Math.floor(Date.now() / 1000);
-    let cls = 'bg-neutral-800 text-neutral-300';
+    let cls = 'bg-bg text-muted';
     let title = relativeTime(c.value);
     if (c.key === 'exp') {
-      if (c.value < now) cls = 'bg-red-500/20 text-red-400';
-      else if (c.value < now + 86400) cls = 'bg-amber-500/20 text-amber-400';
-      else cls = 'bg-emerald-500/20 text-emerald-400';
+      if (c.value < now) cls = 'bg-bg text-err border border-err';
+      else if (c.value < now + 86400) cls = 'bg-bg text-warn border border-warn';
+      else cls = 'bg-bg text-ok border border-ok';
     }
-    if (c.key === 'nbf' && c.value > now) cls = 'bg-amber-500/20 text-amber-400';
+    if (c.key === 'nbf' && c.value > now) cls = 'bg-bg text-warn border border-warn';
     const span = document.createElement('span');
-    span.className = `text-[10px] font-mono px-1.5 py-0.5 rounded ${cls}`;
+    span.className = `text-[10px] font-mono px-1.5 py-0.5 rounded-sm ${cls}`;
     span.textContent = c.label;
     span.title = `${new Date(c.value * 1000).toISOString()} (${title})`;
     wrap.appendChild(span);
@@ -163,10 +163,10 @@ function showVerifyResult(valid: boolean, reason?: string) {
   const el = $('jwt-verify-result');
   el.classList.remove('hidden');
   if (valid) {
-    el.className = 'rounded-lg border p-3 text-sm border-emerald-500/30 bg-emerald-500/10 text-emerald-300';
+    el.className = 'rounded-sm border p-3 text-sm border-ok bg-bg text-ok';
     el.textContent = '✓ Signature valid';
   } else {
-    el.className = 'rounded-lg border p-3 text-sm border-red-500/30 bg-red-500/10 text-red-300';
+    el.className = 'rounded-sm border p-3 text-sm border-err bg-bg text-err';
     el.textContent = `✗ Signature invalid: ${reason ?? 'unknown reason'}`;
   }
 }
@@ -195,10 +195,10 @@ export function jwtSection() {
       headerEl.textContent = fmtJson(header);
       payloadEl.textContent = fmtJson(payload);
       algoBadge.textContent = alg;
-      algoBadge.className = `text-[10px] font-mono px-1.5 py-0.5 rounded ${
-        alg === 'none' ? 'bg-red-500/20 text-red-400' :
-        alg.startsWith('HS') ? 'bg-amber-500/20 text-amber-400' :
-        'bg-accent/20 text-accent'
+      algoBadge.className = `text-[10px] font-mono px-1.5 py-0.5 rounded-sm ${
+        alg === 'none' ? 'bg-bg text-err border border-err' :
+        alg.startsWith('HS') ? 'bg-bg text-warn border border-warn' :
+        'bg-bg text-accent border border-accent'
       }`;
       renderClaims(payload);
       $('jwt-verify-result').classList.add('hidden');
