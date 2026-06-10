@@ -27,7 +27,6 @@ import ToolLayout from '../components/ToolLayout.astro';
             <span class="label">Next 10 Runs</span>
             <select id="cron-tz" class="bg-raised border border-rule text-xs text-ink rounded-sm px-2 py-1 focus:outline-none focus:border-accent">
               <option value="local">Local time</option>
-              <option value="UTC">UTC</option>
             </select>
           </div>
           <ul id="cron-next" class="divide-y divide-rule text-sm font-mono"></ul>
@@ -42,10 +41,12 @@ import ToolLayout from '../components/ToolLayout.astro';
     </div>
 
     <p slot="explainer">
-      Enter a standard 5-field cron expression (minute, hour, day-of-month, month,
-      day-of-week) to see the next ten times it will fire — in your local timezone or
-      UTC — plus a plain-English summary of the schedule. Everything is computed in
-      your browser; nothing is uploaded.
+      Enter a cron expression to see the next ten times it will fire — in your local
+      timezone, UTC, or any IANA zone — plus a plain-English summary of the schedule.
+      Supports standard 5-field cron (minute, hour, day-of-month, month, day-of-week),
+      named <code>@</code>-aliases (<code>@daily</code>, <code>@hourly</code>,
+      <code>@weekly</code>, …), and 6-field expressions with a leading seconds field.
+      Everything is computed in your browser; nothing is uploaded.
     </p>
   </ToolLayout>
 </Base>

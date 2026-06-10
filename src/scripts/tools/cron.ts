@@ -1,5 +1,6 @@
-// Cron parser: next N runs + human-readable explanation.
-// Supports 5-field standard cron (minute, hour, day-of-month, month, day-of-week).
+// Cron parser: human-readable explanation. Occurrence finding via croner (src/lib/cronx).
+// Supports 5-field standard cron, @-aliases, IANA timezones, and 6-field (seconds).
+import { nextRunsTz, normalizeExpr } from '../../lib/cronx';
 
 const FIELD_NAMES = ['minute', 'hour', 'day of month', 'month', 'day of week'] as const;
 const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -64,38 +65,6 @@ export function parseCron(expr: string): ParsedCron {
   return { fields: [mins, hours, doms, months, dows], raw: expr.trim() };
 }
 
-function nextOccurrence(parsed: ParsedCron, from: Date, tz: 'UTC' | 'local'): Date | null {
-  const [mins, hours, doms, months, dows] = parsed.fields;
-  // Work in a copy of `from` and bump minute by 1 to find NEXT run.
-  const d = new Date(from.getTime() + 60_000);
-  d.setSeconds(0, 0);
-  // Use UTC getters for stable iteration
-  for (let i = 0; i < 366 * 24 * 60; i++) {
-    const month = (tz === 'UTC' ? d.getUTCMonth() : d.getMonth()) + 1;
-    const dom = tz === 'UTC' ? d.getUTCDate() : d.getDate();
-    const dow = tz === 'UTC' ? d.getUTCDay() : d.getDay();
-    const hour = tz === 'UTC' ? d.getUTCHours() : d.getHours();
-    const minute = tz === 'UTC' ? d.getUTCMinutes() : d.getMinutes();
-    if (months.values.includes(month) && dows.values.includes(dow) && doms.values.includes(dom) && hours.values.includes(hour) && mins.values.includes(minute)) {
-      return d;
-    }
-    d.setMinutes(d.getMinutes() + 1);
-  }
-  return null;
-}
-
-export function nextRuns(parsed: ParsedCron, n: number, tz: 'UTC' | 'local'): Date[] {
-  const runs: Date[] = [];
-  let cursor = new Date();
-  for (let i = 0; i < n; i++) {
-    const r = nextOccurrence(parsed, cursor, tz);
-    if (!r) break;
-    runs.push(r);
-    cursor = r;
-  }
-  return runs;
-}
-
 function fieldDescription(f: CronField, max: number, isDow: boolean): string {
   if (f.raw === '*') return 'every';
   if (f.raw.startsWith('*/')) return `every ${f.raw.slice(2)}`;
@@ -122,6 +91,44 @@ export function explain(parsed: ParsedCron): string {
 
 function $(id: string) { return document.getElementById(id)!; }
 
+const CURATED_ZONES = [
+  'Asia/Kolkata', 'America/New_York', 'America/Los_Angeles',
+  'Europe/London', 'Europe/Berlin', 'Asia/Tokyo', 'Australia/Sydney',
+];
+
+function populateTz(tz: HTMLSelectElement) {
+  // Only build once; the .astro markup may ship a stub select.
+  const local = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  tz.innerHTML = '';
+  const opts: [string, string][] = [
+    ['local', `Local (${local})`],
+    ['UTC', 'UTC'],
+    ...CURATED_ZONES.map((z) => [z, z] as [string, string]),
+  ];
+  for (const [value, label] of opts) {
+    const o = document.createElement('option');
+    o.value = value;
+    o.textContent = label;
+    tz.appendChild(o);
+  }
+}
+
+// Plain-English line. Handles @-aliases and 6-field (seconds-first) exprs.
+function explainLine(rawExpr: string): string {
+  const normalized = normalizeExpr(rawExpr);
+  const tokens = normalized.split(/\s+/);
+  try {
+    if (tokens.length === 6) {
+      // 6-field croner is `s m h dom mon dow` — explain the minute-level fields.
+      const base = explain(parseCron(tokens.slice(1).join(' ')));
+      return `${base} (seconds field handled separately.)`;
+    }
+    return explain(parseCron(normalized));
+  } catch {
+    return '—';
+  }
+}
+
 export function cronSection() {
   const input = $('cron-input') as HTMLInputElement;
   const tz = $('cron-tz') as HTMLSelectElement;
@@ -129,20 +136,21 @@ export function cronSection() {
   const nextList = $('cron-next');
   const explainEl = $('cron-explain');
 
+  populateTz(tz);
+
   function run() {
     errEl.classList.add('hidden');
     nextList.innerHTML = '';
+    const isUtc = tz.value === 'UTC';
     try {
-      const parsed = parseCron(input.value);
-      const tzMode = tz.value as 'UTC' | 'local';
-      const runs = nextRuns(parsed, 10, tzMode);
+      const runs = nextRunsTz(input.value, 10, tz.value);
       const frag = document.createDocumentFragment();
       for (const r of runs) {
         const li = document.createElement('li');
         li.className = 'px-4 py-2 flex items-center justify-between hover:bg-bg transition-colors';
         const left = document.createElement('span');
         left.className = 'text-ink';
-        left.textContent = (tzMode === 'UTC' ? r.toISOString() : r.toLocaleString()).replace('T', ' ').slice(0, 19);
+        left.textContent = (isUtc ? r.toISOString() : r.toLocaleString()).replace('T', ' ').slice(0, 19);
         const right = document.createElement('span');
         const diff = r.getTime() - Date.now();
         right.className = 'text-xs text-muted';
@@ -154,11 +162,11 @@ export function cronSection() {
         frag.appendChild(li);
       }
       nextList.appendChild(frag);
-      explainEl.textContent = explain(parsed);
+      explainEl.textContent = explainLine(input.value);
     } catch (e) {
       errEl.textContent = (e as Error).message;
       errEl.classList.remove('hidden');
-      explainEl.textContent = '—';
+      explainEl.textContent = explainLine(input.value);
     }
   }
 
