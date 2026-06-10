@@ -1,31 +1,20 @@
-/** @type {import('tailwindcss').Config} */
+// tailwind.config.mjs — semantic tokens only; components NEVER use raw palette colors
 export default {
-  content: ['./src/**/*.{astro,html,js,jsx,ts,tsx,md,mdx}'],
-  darkMode: 'class',
+  content: ['./src/**/*.{astro,html,ts,tsx,md}'],
   theme: {
-    extend: {
-      fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-        mono: ['JetBrains Mono', 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
-      },
-      colors: {
-        accent: {
-          DEFAULT: '#7ec699',
-          hover: '#95d4ad',
-        },
-      },
-      animation: {
-        'fade-in': 'fadeIn 0.2s ease-out',
-        'slide-in': 'slideIn 0.3s ease-out',
-      },
-      keyframes: {
-        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-        slideIn: {
-          '0%': { transform: 'translateY(-4px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-      },
+    colors: {
+      bg: 'var(--bg)', raised: 'var(--bg-raised)',
+      ink: 'var(--ink)', muted: 'var(--muted)',
+      accent: 'var(--accent)', 'accent-ink': 'var(--accent-ink)',
+      rule: 'var(--rule)', 'rule-strong': 'var(--rule-strong)',
+      ok: 'var(--ok)', warn: 'var(--warn)', err: 'var(--err)',
+      transparent: 'transparent', current: 'currentColor',
     },
+    fontFamily: {
+      display: ['Fraunces Variable', 'Georgia', 'serif'],
+      mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+      body: ['system-ui', 'sans-serif'],
+    },
+    extend: {},
   },
-  plugins: [],
 };

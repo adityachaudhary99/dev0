@@ -1,0 +1,19 @@
+/* 0ds tokens — canonical source: browser-based-tools/DESIGN.md. Copy, don't drift. */
+:root, [data-theme="paper"] {
+  --bg: #f0e9d8; --bg-raised: #f5f0e3;
+  --ink: #1a1612; --muted: #6b6256;
+  --accent: #a8421e; --accent-ink: #f0e9d8;
+  --rule: rgba(26, 22, 18, 0.15); --rule-strong: #1a1612;
+  --ok: #3d6b35; --warn: #9a6a1f; --err: #8c2f1b;
+  --grain-opacity: 0.05;
+}
+[data-theme="nocturne"] {
+  --bg: #0e0e0e; --bg-raised: #161616;
+  --ink: #ededed; --muted: #9a9a9a;
+  --accent: #e8a33d; --accent-ink: #0e0e0e;
+  --rule: rgba(237, 237, 237, 0.15); --rule-strong: #ededed;
+  --ok: #7fb069; --warn: #d9a441; --err: #d96c4f;
+  --grain-opacity: 0.035;
+}
+html { background: var(--bg); color: var(--ink); }
+::selection { background: var(--accent); color: var(--accent-ink); }
