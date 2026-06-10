@@ -92,9 +92,9 @@ export function b64Section() {
     mode = m;
     for (const b of document.querySelectorAll<HTMLButtonElement>('.b64-mode-btn')) {
       const isActive = b.dataset.b64Mode === m;
-      b.classList.toggle('bg-accent/10', isActive);
+      b.classList.toggle('bg-bg', isActive);
       b.classList.toggle('text-accent', isActive);
-      b.classList.toggle('text-neutral-400', !isActive);
+      b.classList.toggle('text-muted', !isActive);
     }
     updateLabels();
     run();
@@ -103,9 +103,9 @@ export function b64Section() {
     enc = e;
     for (const b of document.querySelectorAll<HTMLButtonElement>('.b64-enc-btn')) {
       const isActive = b.dataset.b64Enc === e;
-      b.classList.toggle('bg-accent/10', isActive);
+      b.classList.toggle('bg-bg', isActive);
       b.classList.toggle('text-accent', isActive);
-      b.classList.toggle('text-neutral-400', !isActive);
+      b.classList.toggle('text-muted', !isActive);
     }
     updateLabels();
     run();
@@ -130,15 +130,15 @@ export function b64Section() {
       // Reflect detected state in UI
       for (const b of document.querySelectorAll<HTMLButtonElement>('.b64-mode-btn')) {
         const isActive = b.dataset.b64Mode === effective.mode;
-        b.classList.toggle('bg-accent/10', isActive);
+        b.classList.toggle('bg-bg', isActive);
         b.classList.toggle('text-accent', isActive);
-        b.classList.toggle('text-neutral-400', !isActive);
+        b.classList.toggle('text-muted', !isActive);
       }
       for (const b of document.querySelectorAll<HTMLButtonElement>('.b64-enc-btn')) {
         const isActive = b.dataset.b64Enc === effective.enc;
-        b.classList.toggle('bg-accent/10', isActive);
+        b.classList.toggle('bg-bg', isActive);
         b.classList.toggle('text-accent', isActive);
-        b.classList.toggle('text-neutral-400', !isActive);
+        b.classList.toggle('text-muted', !isActive);
       }
       updateLabels();
     }
