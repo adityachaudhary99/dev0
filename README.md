@@ -1,64 +1,79 @@
 # dev0.dev
 
-**Browser dev tools. Nothing leaves your page.**
+**Browser dev tools. Nothing leaves this page.**
 
-JWT decoder · Regex tester · Cron parser · Base64 / URL / Hex chain. 100% client-side, your tokens never leave the browser.
+Ten client-side developer tools — JWT, regex, cron, base64, unix time, JSON→types, jq, ER diagrams, UUID/ULID, certificates. 100% in your browser; nothing is ever uploaded.
 
 🔗 **Live:** _(to be deployed on Vercel)_
 
-## Deploy to Vercel
-
-1. **Import the GitHub repo** in Vercel dashboard — `adityachaudhary99/dev0`
-   - Build command: `npm run build` (auto-detected)
-   - Output directory: `dist` (auto-detected)
-2. **CLI:** `vercel --prod` from the repo root
-
-Static site. No server, no env vars, no API routes.
-
 ## Tools
 
-- **🔐 JWT Decoder** — Decode any JWT, see header/payload, verify HS256/384/512 with HMAC secret, RS256/ES256 with PEM public key. exp/nbf/iat badges with relative time and color-coded validity.
-- **🔍 Regex Tester** — Live match highlighting, capture groups, token-by-token explanation. Pre-loaded sample with emails, phones, dates, IPs.
-- **⏰ Cron Parser** — Next 10 runs in local or UTC. Human-readable explanation: "Runs every 15 minute, during hours 9-17, on Monday-Friday."
-- **🔗 Base64 / URL / Hex** — Encode/decode with auto-detect mode (sniffs Base64 vs Hex input), or pick explicitly. Copy-to-clipboard, byte counts.
+Each tool is its own real route (one URL = one job).
 
-## Stack
-
-- [Astro 5](https://astro.build/) — static site generation, zero JS by default
-- [Tailwind CSS 3](https://tailwindcss.com/) — utility-first, no hand-rolled CSS
-- Vanilla TypeScript — no React/Vue/Svelte
-- [Inter](https://fonts.google.com/specimen/Inter) + [JetBrains Mono](https://www.jetbrains.com/lp/mono/) — clean, readable, free
+| Route | Tool | What it does |
+|---|---|---|
+| `/jwt` | JWT Decoder & Verifier | Decode + verify HS256/384/512 (HMAC) and RS256/ES256 (PEM), exp/nbf/iat badges. |
+| `/regex` | Regex Tester | Live match highlighting, capture groups, token explanation. |
+| `/cron` | Cron Expression Parser | Next 10 runs in any IANA timezone, plain English, `@daily` aliases, 6-field (seconds). |
+| `/base64` | Base64 / URL / Hex | Encode/decode with auto-detect, byte counts, copy. |
+| `/epoch` | Unix Timestamp Converter | Epoch ↔ human, auto-detects s/ms/µs, all timezones, live clock. |
+| `/json-to-types` | JSON to Types | JSON → TypeScript / Zod / Python dataclass / Go struct (quicktype, lazy-loaded). |
+| `/jq` | jq Playground | Real jq compiled to WebAssembly; run filters over JSON locally. |
+| `/erd` | SQL DDL to ER Diagram | Paste `CREATE TABLE`s → entity diagram (dagre + SVG), export SVG/PNG. |
+| `/uuid` | UUID & ULID Toolbox | Bulk-generate v4/v7, decode embedded timestamps from UUIDv7 and ULID. |
+| `/cert` | Certificate Decoder | Paste PEM/DER → subject, issuer, expiry, SANs, fingerprints. |
 
 ## Why
 
-Every other JWT decoder, regex tester, and cron parser on the web runs your input through their servers. **dev0 never does.** The HS256 verify uses Web Crypto's `subtle.verify()` in the browser; the regex runs native `RegExp`; the cron walks dates in memory; the Base64 uses `btoa`/`atob`. Zero outbound requests after the static page loads.
+Every other JWT decoder, regex tester, and cron parser on the web can run your input through their servers. **dev0 never does.** JWT verify uses Web Crypto's `subtle.verify()`; regex runs native `RegExp`; cron uses [croner](https://github.com/hexagon/croner) in memory; jq is the real tool compiled to WASM; certificates are parsed with `@peculiar/x509`. Zero outbound requests after the static page loads — verify it yourself in DevTools → Network. Fonts are self-hosted, so even those aren't a network call.
+
+## Design system (0ds)
+
+dev0 uses the shared **0ds** editorial design system (see `../DESIGN.md`): an editorial paper aesthetic — cream/ink with a vermilion accent (`paper`), or off-white-on-near-black with amber (`nocturne`) — set in Fraunces + JetBrains Mono with subtle paper grain, hairline rules, and print corner-marks. Two themes toggle via the `◐` button and persist to `localStorage`. Components use only semantic Tailwind tokens (`bg-bg`, `text-ink`, `text-accent`, `border-rule`, …) — never raw palette colors.
 
 ## Architecture
 
 ```
 src/
-├── layouts/Layout.astro      # Shell: header, tab nav, hash router script
-├── pages/index.astro         # All 4 tool sections in one page (SPA-like hash routing)
+├── layouts/Base.astro          # Shell: <head>/meta/theme pre-paint, grain, Header, Footer
+├── components/
+│   ├── Header.astro            # Wordmark, numbered nav (real <a> links), theme toggle, pro
+│   ├── Footer.astro            # 0-family links, trust line
+│   └── ToolLayout.astro        # h1 + trust strip + slot + SEO explainer slot
+├── pages/                      # One real route per tool (+ index directory, /pro)
+│   ├── jwt.astro … cert.astro  # thin shells: Base + ToolLayout + <script> calling the tool
+│   ├── index.astro             # landing directory + legacy #/hash → real-route redirect
+│   └── pro.astro               # offline license activation (see Monetization)
 ├── scripts/
-│   ├── main.ts               # Wires the right tool when hash changes
-│   └── tools/
-│       ├── jwt.ts            # JWT decode + Web Crypto verify
-│       ├── regex.ts          # Match highlighting + token explanation
-│       ├── cron.ts           # 5-field cron → next 10 runs + human-readable
-│       └── b64.ts            # Base64/URL/Hex encode-decode + auto-detect
-└── styles/global.css         # Tailwind base + small custom additions
+│   ├── theme.ts                # theme toggle
+│   └── tools/*.ts              # DOM wiring per tool (no business logic)
+├── lib/                        # pure, unit-tested logic (no DOM)
+│   ├── entitlements.ts         # offline ECDSA license verification
+│   ├── epoch.ts, ulid.ts, ddl.ts, cronx.ts
+│   └── …
+└── styles/{tokens.css,global.css}
+tests/                          # vitest, node env — epoch, ulid, ddl, cronx, entitlements
 ```
 
-`index.astro` is a single static page; all 4 tool sections live in the DOM, hidden via `[data-tool-section]` attribute toggling. Hash routing (`#/jwt`, `#/regex`, etc.) lets the user deep-link to any tool.
+**Separation of concerns:** pure logic lives in `src/lib/` and is unit-tested in Node (vitest); DOM wiring lives in `src/scripts/tools/`; pages are thin Astro shells. Tools that ship large WASM/engines (jq, quicktype) lazy-load them in a separate chunk so pages stay instant.
+
+## Monetization (entitlements)
+
+dev0 ships an offline entitlements module (`src/lib/entitlements.ts`, see `../MONETIZATION.md`) so paid features can be added later without refactoring. Licenses are ECDSA-P256-signed and verified **locally** in the browser — no license server, consistent with the zero-server thesis. **Everything is free today**; this is plumbing only. The `/pro` page lets a holder activate a key.
 
 ## Development
 
 ```bash
 npm install
 npm run dev      # http://localhost:4321
+npm test         # vitest (pure-logic unit tests)
 npm run build    # static output in dist/
-npm run preview  # serve dist/ locally
+npm run preview  # serve dist/ locally (use this to verify WASM tools, not just dev)
 ```
+
+## Deploy to Vercel
+
+Static site, no server/env vars. Import `adityachaudhary99/dev0` in Vercel (build `npm run build`, output `dist`), or `vercel --prod` from the repo root.
 
 ## License
 
