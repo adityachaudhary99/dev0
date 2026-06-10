@@ -10,6 +10,7 @@ const TARGETS = [
   { id: 'typescript', label: 'TypeScript' },
   { id: 'typescript-zod', label: 'Zod' },
   { id: 'python', label: 'Python (dataclass)' },
+  { id: 'pydantic', label: 'Pydantic' },
   { id: 'go', label: 'Go' },
 ];
 
@@ -56,9 +57,13 @@ export function jsonTypesSection() {
     target = id;
     for (const btn of targetsWrap.querySelectorAll<HTMLButtonElement>('[data-target]')) {
       const on = btn.dataset.target === id;
+      // active: solid accent chip with legible accent-ink text.
+      // inactive: plain bg with muted text. Toggle every class mutually so two
+      // competing bg/text utilities never coexist (that bug hid the label).
       btn.classList.toggle('bg-accent', on);
-      btn.classList.toggle('text-bg', on);
+      btn.classList.toggle('text-accent-ink', on);
       btn.classList.toggle('border-accent', on);
+      btn.classList.toggle('bg-bg', !on);
       btn.classList.toggle('text-muted', !on);
       btn.classList.toggle('border-rule', !on);
     }
@@ -68,7 +73,7 @@ export function jsonTypesSection() {
     const btn = document.createElement('button');
     btn.dataset.target = t.id;
     btn.textContent = t.label;
-    btn.className = 'text-xs font-medium px-2.5 py-1 rounded-sm border bg-bg transition-colors';
+    btn.className = 'text-xs font-medium px-2.5 py-1 rounded-sm border transition-colors';
     btn.addEventListener('click', () => {
       selectTarget(t.id);
       schedule(0);
