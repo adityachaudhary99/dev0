@@ -110,7 +110,7 @@ function renderMatches(input: string, regex: RegExp) {
   if (!regex.global && !regex.sticky) {
     // No g flag: just highlight first match.
     const m = regex.exec(input);
-    if (!m) { out.innerHTML = '<span class="text-neutral-600">No match.</span>'; return [m]; }
+    if (!m) { out.innerHTML = '<span class="text-muted">No match.</span>'; return [m]; }
     return [m];
   }
   const matches: RegExpExecArray[] = [];
@@ -123,24 +123,24 @@ function renderMatches(input: string, regex: RegExp) {
     if (m.index === regex.lastIndex) regex.lastIndex++; // empty match safety
   }
   if (matches.length === 0) {
-    out.innerHTML = '<span class="text-neutral-600">No match.</span>';
+    out.innerHTML = '<span class="text-muted">No match.</span>';
     return matches;
   }
   // Build HTML with highlights
   let html = '';
   let cursor = 0;
   const palette = [
-    'bg-amber-500/30 text-amber-200 border border-amber-500/40',
-    'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40',
-    'bg-sky-500/30 text-sky-200 border border-sky-500/40',
-    'bg-pink-500/30 text-pink-200 border border-pink-500/40',
+    'bg-bg text-warn border border-warn',
+    'bg-bg text-ok border border-ok',
+    'bg-bg text-accent border border-accent',
+    'bg-bg text-err border border-err',
   ];
   matches.forEach((m, i) => {
     const cls = palette[i % palette.length];
     const before = escapeHtml(input.slice(cursor, m.index));
     const match = escapeHtml(m[0]);
     html += before;
-    html += `<span class="rounded px-0.5 ${cls}">${match}</span>`;
+    html += `<span class="rounded-sm px-0.5 ${cls}">${match}</span>`;
     cursor = m.index + m[0].length;
   });
   html += escapeHtml(input.slice(cursor));
@@ -156,10 +156,10 @@ function renderGroups(matches: RegExpExecArray[]) {
   if (m.length > 1) {
     for (let i = 1; i < m.length; i++) {
       const v = m[i] ?? '';
-      lines.push(`<span class="text-accent">$${i}</span>  =  <span class="text-emerald-300">${escapeHtml(v)}</span>`);
+      lines.push(`<span class="text-accent">$${i}</span>  =  <span class="text-ink">${escapeHtml(v)}</span>`);
     }
   } else {
-    lines.push('<span class="text-neutral-600">(no capture groups)</span>');
+    lines.push('<span class="text-muted">(no capture groups)</span>');
   }
   el.innerHTML = lines.join('<br>');
 }
@@ -183,7 +183,7 @@ export function regexSection() {
     } catch (e) {
       errEl.textContent = (e as Error).message;
       errEl.classList.remove('hidden');
-      $('regex-output').innerHTML = '<span class="text-neutral-600">Invalid pattern.</span>';
+      $('regex-output').innerHTML = '<span class="text-muted">Invalid pattern.</span>';
       $('regex-groups').textContent = '—';
       matchCount.textContent = '0 matches';
       return;
@@ -195,7 +195,7 @@ export function regexSection() {
     const lines = explainPattern(pat);
     explainEl.innerHTML = lines.length
       ? lines.map(l => `<div class="py-0.5">${escapeHtml(l)}</div>`).join('')
-      : '<span class="text-neutral-600">(empty pattern)</span>';
+      : '<span class="text-muted">(empty pattern)</span>';
   }
 
   pattern.addEventListener('input', run);
