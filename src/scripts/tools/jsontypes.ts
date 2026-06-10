@@ -4,14 +4,23 @@
 
 function $(id: string) { return document.getElementById(id)!; }
 
-// Local copy of the target list — we deliberately do NOT import the engine here,
-// since that would pull quicktype-core into this light chunk.
-const TARGETS = [
-  { id: 'typescript', label: 'TypeScript' },
-  { id: 'typescript-zod', label: 'Zod' },
-  { id: 'python', label: 'Python (dataclass)' },
-  { id: 'pydantic', label: 'Pydantic' },
-  { id: 'go', label: 'Go' },
+// Targets grouped by language (NOT a flat list): a language can have multiple
+// output flavors — TypeScript → interface/Zod, Python → dataclass/Pydantic. The
+// flavor id is the quicktype target the engine understands. We deliberately do
+// NOT import the engine here, since that would pull quicktype-core into this
+// light chunk.
+const LANGS = [
+  { id: 'ts', label: 'TypeScript', flavors: [
+    { id: 'typescript', label: 'Interface' },
+    { id: 'typescript-zod', label: 'Zod' },
+  ] },
+  { id: 'py', label: 'Python', flavors: [
+    { id: 'python', label: 'Dataclass' },
+    { id: 'pydantic', label: 'Pydantic' },
+  ] },
+  { id: 'go', label: 'Go', flavors: [
+    { id: 'go', label: 'Go' },
+  ] },
 ];
 
 const SAMPLE = JSON.stringify(
@@ -52,35 +61,63 @@ export function jsonTypesSection() {
   let debounce: number | undefined;
   let runToken = 0;
 
-  // --- target segmented control -------------------------------------------
-  function selectTarget(id: string) {
-    target = id;
-    for (const btn of targetsWrap.querySelectorAll<HTMLButtonElement>('[data-target]')) {
-      const on = btn.dataset.target === id;
-      // active: solid accent chip with legible accent-ink text.
-      // inactive: plain bg with muted text. Toggle every class mutually so two
-      // competing bg/text utilities never coexist (that bug hid the label).
-      btn.classList.toggle('bg-accent', on);
-      btn.classList.toggle('text-accent-ink', on);
-      btn.classList.toggle('border-accent', on);
-      btn.classList.toggle('bg-bg', !on);
-      btn.classList.toggle('text-muted', !on);
-      btn.classList.toggle('border-rule', !on);
+  // --- two-tier selector: language row + (conditional) flavor row ----------
+  // Stack the two rows; the flavor row only appears for languages with >1 flavor.
+  targetsWrap.className = 'flex flex-col gap-2';
+  const langRow = document.createElement('div');
+  langRow.className = 'flex flex-wrap items-center gap-1.5';
+  const flavorRow = document.createElement('div');
+  flavorRow.className = 'flex flex-wrap items-center gap-1.5';
+  targetsWrap.append(langRow, flavorRow);
+
+  // Build an accent-chip. `on` = solid accent + accent-ink text; otherwise plain
+  // bg + muted text. Every class is set explicitly so two competing bg/text
+  // utilities never coexist (that coexistence is what hid the active label).
+  function chip(label: string, on: boolean, onClick: () => void): HTMLButtonElement {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = label;
+    btn.className = `text-xs font-medium px-2.5 py-1 rounded-sm border transition-colors ${
+      on ? 'bg-accent text-accent-ink border-accent' : 'bg-bg text-muted border-rule'
+    }`;
+    btn.addEventListener('click', onClick);
+    return btn;
+  }
+
+  function currentLang() {
+    return LANGS.find((l) => l.flavors.some((f) => f.id === target)) ?? LANGS[0];
+  }
+
+  function renderSelector() {
+    const lang = currentLang();
+    langRow.replaceChildren(
+      ...LANGS.map((l) =>
+        chip(l.label, l === lang, () => {
+          // switching language jumps to its first flavor (unless already in it)
+          if (!l.flavors.some((f) => f.id === target)) target = l.flavors[0].id;
+          renderSelector();
+          schedule(0);
+        }),
+      ),
+    );
+    if (lang.flavors.length < 2) {
+      flavorRow.classList.add('hidden');
+      flavorRow.replaceChildren();
+    } else {
+      flavorRow.classList.remove('hidden');
+      flavorRow.replaceChildren(
+        ...lang.flavors.map((f) =>
+          chip(f.label, f.id === target, () => {
+            target = f.id;
+            renderSelector();
+            schedule(0);
+          }),
+        ),
+      );
     }
   }
 
-  for (const t of TARGETS) {
-    const btn = document.createElement('button');
-    btn.dataset.target = t.id;
-    btn.textContent = t.label;
-    btn.className = 'text-xs font-medium px-2.5 py-1 rounded-sm border transition-colors';
-    btn.addEventListener('click', () => {
-      selectTarget(t.id);
-      schedule(0);
-    });
-    targetsWrap.appendChild(btn);
-  }
-  selectTarget(target);
+  renderSelector();
 
   // --- error / status helpers ---------------------------------------------
   function clearError() {
