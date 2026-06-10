@@ -1,0 +1,160 @@
+// Light DOM wiring for /jq. The heavy jq-web engine (real jq compiled to a
+// ~2.7 MB WebAssembly module) is dynamically imported on first run so this page
+// loads instantly and the wasm is fetched + cached lazily as its own chunk.
+//
+// WASM path note: jq-web (0.6.2) is an Emscripten MODULARIZE build whose default
+// export is a *thenable* that resolves to `{ json, raw }`. Emscripten locates
+// `jq.wasm` via `locateFile()`, which under a bundler resolves relative to the
+// page URL — so the wasm must live at a stable, predictable path. We copy it to
+// `public/jq.wasm` (served at the site root `/jq.wasm`), which is exactly where
+// Emscripten's default `locateFile` looks (origin root) when the script source
+// can't be determined inside an ES-module chunk. This works identically in
+// `astro dev` and the production `astro build` + `preview`.
+
+let jqPromise: Promise<any> | null = null;
+function loadJq() {
+  // The default export of jq-web is itself a Promise resolving to { json, raw }.
+  jqPromise ??= import('jq-web').then((m) => (m as any).default ?? m);
+  return jqPromise;
+}
+
+export async function runFilter(jsonText: string, filter: string): Promise<string> {
+  const jq = await loadJq();
+  const data = JSON.parse(jsonText); // throws SyntaxError -> shown as JSON error
+  const out = await jq.json(data, filter); // throws jq error -> shown as filter error
+  return JSON.stringify(out, null, 2);
+}
+
+function $(id: string) {
+  return document.getElementById(id)!;
+}
+
+const SAMPLE_JSON = JSON.stringify(
+  {
+    users: [
+      { name: 'Ada Lovelace', email: 'ada@example.com', active: true, age: 36 },
+      { name: 'Alan Turing', email: 'alan@example.com', active: false, age: 41 },
+      { name: 'Grace Hopper', email: 'grace@example.com', active: true, age: 85 },
+    ],
+  },
+  null,
+  2,
+);
+
+const SAMPLE_FILTER = '.users[] | {name, email}';
+
+export function jqSection() {
+  const filterInput = $('jq-filter') as HTMLInputElement;
+  const jsonInput = $('jq-json') as HTMLTextAreaElement;
+  const output = $('jq-output');
+  const jsonError = $('jq-json-error');
+  const filterError = $('jq-filter-error');
+  const status = $('jq-status');
+  const copyBtn = $('jq-copy') as HTMLButtonElement;
+  const sampleBtn = $('jq-sample') as HTMLButtonElement;
+
+  let loaded = false;
+  let lastOutput = '';
+  let debounce: number | undefined;
+  let runToken = 0;
+
+  function clearJsonError() {
+    jsonError.textContent = '';
+    jsonError.classList.add('hidden');
+  }
+  function showJsonError(msg: string) {
+    jsonError.textContent = msg;
+    jsonError.classList.remove('hidden');
+    output.classList.add('opacity-40');
+  }
+  function clearFilterError() {
+    filterError.textContent = '';
+    filterError.classList.add('hidden');
+  }
+  function showFilterError(msg: string) {
+    filterError.textContent = msg;
+    filterError.classList.remove('hidden');
+    output.classList.add('opacity-40');
+  }
+
+  async function run() {
+    const rawJson = jsonInput.value;
+    const filter = filterInput.value;
+
+    // 1) Validate JSON separately so a parse failure lands in jq-json-error.
+    let data: unknown;
+    try {
+      data = JSON.parse(rawJson);
+    } catch (e) {
+      showJsonError((e as Error).message);
+      return;
+    }
+    clearJsonError();
+
+    // 2) Load the engine lazily on first run.
+    if (!loaded) {
+      status.textContent = 'loading jq… (~2.7 MB, cached after first use)';
+      try {
+        await loadJq();
+        loaded = true;
+      } catch (e) {
+        clearFilterError();
+        showFilterError('failed to load jq: ' + (e as Error).message);
+        status.textContent = '';
+        return;
+      }
+    }
+
+    // 3) Evaluate the filter; a jq failure lands in jq-filter-error.
+    const token = ++runToken;
+    const t0 = performance.now();
+    try {
+      const jq = await loadJq();
+      const out = await jq.json(data, filter);
+      if (token !== runToken) return; // superseded by a newer run
+      const text = JSON.stringify(out, null, 2);
+      lastOutput = text;
+      output.textContent = text;
+      output.classList.remove('opacity-40');
+      clearFilterError();
+      const ms = Math.max(0, Math.round(performance.now() - t0));
+      status.textContent = `ok · ${ms}ms`;
+    } catch (e) {
+      if (token !== runToken) return;
+      // jq emits its compile/runtime errors via stderr (Error.message).
+      const msg = ((e as Error).message || String(e)).trim();
+      showFilterError(msg || 'jq error');
+      status.textContent = 'error';
+    }
+  }
+
+  function schedule(delay = 300) {
+    if (debounce) clearTimeout(debounce);
+    debounce = window.setTimeout(run, delay);
+  }
+
+  filterInput.addEventListener('input', () => schedule());
+  jsonInput.addEventListener('input', () => schedule());
+
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(lastOutput || output.textContent || '');
+    const prev = copyBtn.textContent;
+    copyBtn.textContent = 'copied';
+    copyBtn.classList.add('text-ok', 'border-ok');
+    setTimeout(() => {
+      copyBtn.textContent = prev;
+      copyBtn.classList.remove('text-ok', 'border-ok');
+    }, 1000);
+  });
+
+  sampleBtn.addEventListener('click', () => {
+    jsonInput.value = SAMPLE_JSON;
+    filterInput.value = SAMPLE_FILTER;
+    schedule(0);
+  });
+
+  // Preload the sample and run it once on init.
+  jsonInput.value = SAMPLE_JSON;
+  filterInput.value = SAMPLE_FILTER;
+  schedule(0);
+}
