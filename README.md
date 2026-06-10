@@ -27,9 +27,9 @@ Each tool is its own real route (one URL = one job).
 
 Every other JWT decoder, regex tester, and cron parser on the web can run your input through their servers. **dev0 never does.** JWT verify uses Web Crypto's `subtle.verify()`; regex runs native `RegExp`; cron uses [croner](https://github.com/hexagon/croner) in memory; jq is the real tool compiled to WASM; certificates are parsed with `@peculiar/x509`. Zero outbound requests after the static page loads — verify it yourself in DevTools → Network. Fonts are self-hosted, so even those aren't a network call.
 
-## Design system (0ds)
+## Design
 
-dev0 uses the shared **0ds** editorial design system (see `../DESIGN.md`): an editorial paper aesthetic — cream/ink with a vermilion accent (`paper`), or off-white-on-near-black with amber (`nocturne`) — set in Fraunces + JetBrains Mono with subtle paper grain, hairline rules, and print corner-marks. Two themes toggle via the `◐` button and persist to `localStorage`. Components use only semantic Tailwind tokens (`bg-bg`, `text-ink`, `text-accent`, `border-rule`, …) — never raw palette colors.
+dev0 is intentionally **minimal** — fast, legible, no decoration that gets between you and the tool. System fonts for UI (zero font downloads → faster first paint), JetBrains Mono for code and labels, a restrained blue accent, and a light/dark toggle (`◐`) that persists to `localStorage`. Components use only semantic Tailwind tokens (`bg-bg`, `text-ink`, `text-accent`, `border-rule`, …) mapped to CSS variables — never raw palette colors — so re-theming is a one-file change.
 
 ## Architecture
 
@@ -42,8 +42,7 @@ src/
 │   └── ToolLayout.astro        # h1 + trust strip + slot + SEO explainer slot
 ├── pages/                      # One real route per tool (+ index directory, /pro)
 │   ├── jwt.astro … cert.astro  # thin shells: Base + ToolLayout + <script> calling the tool
-│   ├── index.astro             # landing directory + legacy #/hash → real-route redirect
-│   └── pro.astro               # offline license activation (see Monetization)
+│   └── index.astro             # landing directory + legacy #/hash → real-route redirect
 ├── scripts/
 │   ├── theme.ts                # theme toggle
 │   └── tools/*.ts              # DOM wiring per tool (no business logic)
@@ -57,9 +56,9 @@ tests/                          # vitest, node env — epoch, ulid, ddl, cronx, 
 
 **Separation of concerns:** pure logic lives in `src/lib/` and is unit-tested in Node (vitest); DOM wiring lives in `src/scripts/tools/`; pages are thin Astro shells. Tools that ship large WASM/engines (jq, quicktype) lazy-load them in a separate chunk so pages stay instant.
 
-## Monetization (entitlements)
+## Support
 
-dev0 ships an offline entitlements module (`src/lib/entitlements.ts`, see `../MONETIZATION.md`) so paid features can be added later without refactoring. Licenses are ECDSA-P256-signed and verified **locally** in the browser — no license server, consistent with the zero-server thesis. **Everything is free today**; this is plumbing only. The `/pro` page lets a holder activate a key.
+dev0 is free and has no paid tier — if it's useful, you can [sponsor it on Ko-fi](https://ko-fi.com/adityachaudhary99). An offline entitlements module (`src/lib/entitlements.ts`, see `../MONETIZATION.md`) stays in the tree as dormant plumbing so an optional paid feature could be added later without refactoring — ECDSA-P256 licenses verified **locally** in the browser, no license server — but nothing is gated today.
 
 ## Development
 
