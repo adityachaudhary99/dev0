@@ -66,9 +66,14 @@ import Base from '../layouts/Base.astro';
       const ent = await getEntitlements();
       if (ent.plan === 'pro') {
         formEl.hidden = true;
-        statusEl.innerHTML =
-          '<span class="text-accent">●</span> Pro active · ' +
-          '<span class="text-ink">' + (ent.email ?? '') + '</span>';
+        statusEl.replaceChildren();
+        const dot = document.createElement('span');
+        dot.className = 'text-accent';
+        dot.textContent = '●';
+        const email = document.createElement('span');
+        email.className = 'text-ink';
+        email.textContent = ent.email ?? '';
+        statusEl.append(dot, ' Pro active · ', email);
         const remove = document.createElement('button');
         remove.type = 'button';
         remove.textContent = 'Remove license';
