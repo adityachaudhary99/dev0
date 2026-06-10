@@ -139,13 +139,13 @@ export function cronSection() {
       const frag = document.createDocumentFragment();
       for (const r of runs) {
         const li = document.createElement('li');
-        li.className = 'px-4 py-2 flex items-center justify-between hover:bg-neutral-800/30 transition-colors';
+        li.className = 'px-4 py-2 flex items-center justify-between hover:bg-bg transition-colors';
         const left = document.createElement('span');
-        left.className = 'text-neutral-200';
+        left.className = 'text-ink';
         left.textContent = (tzMode === 'UTC' ? r.toISOString() : r.toLocaleString()).replace('T', ' ').slice(0, 19);
         const right = document.createElement('span');
         const diff = r.getTime() - Date.now();
-        right.className = 'text-xs text-neutral-500';
+        right.className = 'text-xs text-muted';
         if (diff < 60_000) right.textContent = 'in <1 min';
         else if (diff < 3_600_000) right.textContent = `in ${Math.round(diff / 60_000)} min`;
         else if (diff < 86_400_000) right.textContent = `in ${Math.round(diff / 3_600_000)} h`;
