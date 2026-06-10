@@ -4,6 +4,17 @@ import Footer from '../components/Footer.astro';
 import '../styles/global.css';
 interface Props { title: string; description: string; }
 const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://dev0.dev').href;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: title,
+  description,
+  url: canonical,
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Any (web browser)',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 ---
 <!doctype html>
 <html lang="en">
@@ -12,16 +23,22 @@ const { title, description } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site ?? 'https://dev0.dev')} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="dev0" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
     <script is:inline>
       const t = localStorage.getItem('0-theme');
       if (t === 'nocturne') document.documentElement.dataset.theme = 'nocturne';
     </script>
   </head>
   <body class="bg-bg text-ink min-h-screen flex flex-col">
-    <div class="grain" aria-hidden="true"></div>
     <Header />
     <main class="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-8"><slot /></main>
     <Footer />

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://dev0.dev/</loc></url>
+  <url><loc>https://dev0.dev/jwt</loc></url>
+  <url><loc>https://dev0.dev/regex</loc></url>
+  <url><loc>https://dev0.dev/cron</loc></url>
+  <url><loc>https://dev0.dev/base64</loc></url>
+  <url><loc>https://dev0.dev/epoch</loc></url>
+  <url><loc>https://dev0.dev/json-to-types</loc></url>
+  <url><loc>https://dev0.dev/jq</loc></url>
+  <url><loc>https://dev0.dev/erd</loc></url>
+  <url><loc>https://dev0.dev/uuid</loc></url>
+  <url><loc>https://dev0.dev/cert</loc></url>
+</urlset>
