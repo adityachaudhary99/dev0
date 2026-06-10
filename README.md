@@ -17,7 +17,7 @@ Each tool is its own real route (one URL = one job).
 | `/cron` | Cron Expression Parser | Next 10 runs in any IANA timezone, plain English, `@daily` aliases, 6-field (seconds). |
 | `/base64` | Base64 / URL / Hex | Encode/decode with auto-detect, byte counts, copy. |
 | `/epoch` | Unix Timestamp Converter | Epoch ↔ human, auto-detects s/ms/µs, all timezones, live clock. |
-| `/json-to-types` | JSON to Types | JSON → TypeScript / Zod / Python dataclass / Go struct (quicktype, lazy-loaded). |
+| `/json-to-types` | JSON to Types | JSON → TypeScript / Zod / Python dataclass / Pydantic / Go struct (quicktype, lazy-loaded). |
 | `/jq` | jq Playground | Real jq compiled to WebAssembly; run filters over JSON locally. |
 | `/erd` | SQL DDL to ER Diagram | Paste `CREATE TABLE`s → entity diagram (dagre + SVG), export SVG/PNG. |
 | `/uuid` | UUID & ULID Toolbox | Bulk-generate v4/v7, decode embedded timestamps from UUIDv7 and ULID. |
@@ -58,7 +58,7 @@ tests/                          # vitest, node env — epoch, ulid, ddl, cronx, 
 
 ## Support
 
-dev0 is free and has no paid tier — if it's useful, you can [sponsor it on Ko-fi](https://ko-fi.com/adityachaudhary99). An offline entitlements module (`src/lib/entitlements.ts`, see `../MONETIZATION.md`) stays in the tree as dormant plumbing so an optional paid feature could be added later without refactoring — ECDSA-P256 licenses verified **locally** in the browser, no license server — but nothing is gated today.
+dev0 is free and has no paid tier — if it's useful, you can [sponsor it on Ko-fi](https://ko-fi.com/thecalendre). An offline entitlements module (`src/lib/entitlements.ts`, see `../MONETIZATION.md`) stays in the tree as dormant plumbing so an optional paid feature could be added later without refactoring — ECDSA-P256 licenses verified **locally** in the browser, no license server — but nothing is gated today.
 
 ## Development
 
