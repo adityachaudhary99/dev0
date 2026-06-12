@@ -15,6 +15,7 @@
     "@astrojs/tailwind": "^5.1.5",
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@peculiar/x509": "^2.0.0",
+    "@vercel/analytics": "^2.0.1",
     "astro": "^5.1.5",
     "croner": "^10.0.1",
     "dagre": "^0.8.5",
