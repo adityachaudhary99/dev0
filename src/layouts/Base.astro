@@ -5,7 +5,7 @@ import Analytics from '@vercel/analytics/astro';
 import '../styles/global.css';
 interface Props { title: string; description: string; }
 const { title, description } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://dev0.dev').href;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://dev0-beta.vercel.app').href;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
@@ -22,6 +22,8 @@ const jsonLd = {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#2563eb" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
